@@ -1,0 +1,15 @@
+[package]
+name = "cw-storage-macros"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+test = false
+doctest = false
+
+[dependencies]
+paste = "1.0.14"
+
+[dev-dependencies]
+cosmwasm-std = "1.5.0"
+newtype-macros = { git = "https://github.com/v26-solutions/newtype-macros" }
