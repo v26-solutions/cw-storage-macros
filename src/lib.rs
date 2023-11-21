@@ -300,11 +300,11 @@ macro_rules! item {
                 fn works() {
                     let mut storage = MockStorage::from((key(), "test"));
 
-                    assert_eq!(get(&storage), "test".into());
+                    assert_eq!(get(&storage), $t::from("test".to_owned()));
 
-                    set(&mut storage, "test-1".into());
+                    set(&mut storage, $t::from("test-1".to_owned()));
 
-                    assert_eq!(get(&storage), "test-1".into());
+                    assert_eq!(get(&storage), $t::from("test-1".to_owned()));
 
                     assert_eq!(storage, MockStorage::from((key(), "test-1")));
 
@@ -515,6 +515,7 @@ macro_rules! item {
 
             #[cfg(test)]
             mod [<test_ $i _set_get_clear>] {
+                use super::$t;
                 use super::[<$i _key>] as key;
                 use super::[<set_ $i>] as set;
                 use super::[<$i>] as get;
@@ -528,11 +529,11 @@ macro_rules! item {
 
                     assert_eq!(get(&storage), None);
 
-                    set(&mut storage, $int::MAX.into());
+                    set(&mut storage, $t::from($int::MAX));
 
-                    assert_eq!(get(&storage), Some($int::MAX.into()));
+                    assert_eq!(get(&storage), Some($t::from($int::MAX)));
 
-                    assert_eq!(storage, MockStorage::from((key(), $int::MAX.into())));
+                    assert_eq!(storage, MockStorage::from((key(), $int::MAX)));
 
                     clear(&mut storage);
 
@@ -598,11 +599,11 @@ macro_rules! item {
                 fn works() {
                     let mut storage = MockStorage::from((key(), 1));
 
-                    assert_eq!(get(&storage), 1.into());
+                    assert_eq!(get(&storage), $t::from([<1 $int>]));
 
-                    set(&mut storage, 2.into());
+                    set(&mut storage, $t::from([<2 $int>]));
 
-                    assert_eq!(get(&storage), 2.into());
+                    assert_eq!(get(&storage), $t::from([<2 $int>]));
 
                     assert_eq!(storage, MockStorage::from((key(), 2)));
 
@@ -1193,7 +1194,7 @@ macro_rules! map {
 
                     set(&mut storage, $kt::example(), $int::MAX.into());
 
-                    assert_eq!(get(&storage, $kt::example()), Some($int::MAX.into()));
+                    assert_eq!(get(&storage, $kt::example()), Some($vt::from($int::MAX)));
 
                     assert_eq!(storage, MockStorage::from((key($kt::example()).as_slice(), $int::MAX)));
 
@@ -1270,11 +1271,11 @@ macro_rules! map {
                 fn works() {
                     let mut storage = MockStorage::from((key($kt::example()).as_slice(), 1));
 
-                    assert_eq!(get(&storage, $kt::example()), 1.into());
+                    assert_eq!(get(&storage, $kt::example()), $vt::from([<1 $int>]));
 
-                    set(&mut storage, $kt::example(), 2.into());
+                    set(&mut storage, $kt::example(), $vt::from([<2 $int>]));
 
-                    assert_eq!(get(&storage, $kt::example()), 2.into());
+                    assert_eq!(get(&storage, $kt::example()), $vt::from([<2 $int>]));
 
                     assert_eq!(storage, MockStorage::from((key($kt::example()).as_slice(), 2)));
 
