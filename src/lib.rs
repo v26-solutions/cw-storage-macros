@@ -3,21 +3,6 @@
 
 pub use paste;
 
-/// Generates a unique key for an item within a map in storage.
-/// First it creates a prefix string with the module path, key identifier, and value identifier.
-/// The final key is made up of the <prefix>.<key-type-instance-to-string>
-#[macro_export]
-macro_rules! map_key {
-    ($k:ident, $v:ident) => {
-        format!(
-            "{}.{}",
-            concat!(module_path!(), "::", stringify!($k), ":", stringify!($v)),
-            $k
-        )
-        .as_bytes()
-    };
-}
-
 /// A macro to generate functions for storing, retrieving, and optionally clearing a single item in storage.
 /// Each item is identified by a unique key, and can be of various standard types like String and integers,
 /// as well as custom types represented as strings, or integers.
