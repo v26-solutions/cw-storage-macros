@@ -3,6 +3,48 @@
 
 pub use paste;
 
+#[macro_export]
+macro_rules! composite_key {
+    ($t:ident, from: ($($from:ty),+)) => {
+        pub struct $t($($from),+);
+
+        $crate::paste::paste! {
+            impl $t {
+                pub fn new($([<$from:lower _v>]: $from),+) -> Self {
+                    Self($([<$from:lower _v>]),+)
+                }
+            }
+
+            impl From<($($from),+)> for $t {
+                fn from(($([<$from:lower _v>]),+): ($($from),+)) -> Self {
+                    Self($([<$from:lower _v>]),+)
+                }
+            }
+
+            impl ::std::fmt::Display for $t {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    let  Self($([<$from:lower _v>]),+) = self;
+                    $(
+                        write!(f, ":{}", [<$from:lower _v>])?;
+                    )+
+                    Ok(())
+                }
+            }
+
+            #[cfg(test)]
+            impl $crate::ExampleKey for $t {
+                fn example() -> Self {
+                    Self::from((
+                        $(
+                            <$from as $crate::ExampleKey>::example()
+                        ),+
+                    ))
+                }
+            }
+        }
+    }
+}
+
 /// A macro to generate functions for storing, retrieving, and optionally clearing a single item in storage.
 /// Each item is identified by a unique key, and can be of various standard types like String and integers,
 /// as well as custom types represented as strings, or integers.

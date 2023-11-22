@@ -11,7 +11,7 @@ wrap_u128!(Deposits);
 wrap_u64!(Cooldown);
 
 mod state {
-    use cw_storage_macros::{example_key, item, map};
+    use cw_storage_macros::{composite_key, example_key, item, map};
 
     use crate::{Address, Asset, Channel, Cooldown, Deposits};
 
@@ -24,18 +24,22 @@ mod state {
     item!(deposits       : Deposits as u128);
     item!(cooldown!      : Cooldown as u64);
 
-    // Generated macro tests don't know how to construct key types, this helps them.
+    // Tests generated in macro don't know how to construct key types, this helps them.
     // TODO: Remove the need for this
     example_key!(Address, "xyz");
+    example_key!(Channel, "test");
 
-    map!(address: Address => name         : String);
-    map!(source: String   => destination! : String);
-    map!(idx: u64         => address      : Address  as String);
-    map!(idx: u64         => channel!     : Channel  as String);
-    map!(idx: u64         => count        : u64);
-    map!(idx: u64         => fee_bps!     : u32);
-    map!(idx: u64         => deposits     : Deposits as u128);
-    map!(idx: u64         => cooldown!    : Cooldown as u64);
+    composite_key!(CompositeKey, from: (Address, Channel));
+
+    map!(address: Address              => name         : String);
+    map!(source: String                => destination! : String);
+    map!(idx: u64                      => address      : Address  as String);
+    map!(idx: u64                      => channel!     : Channel  as String);
+    map!(idx: u64                      => count        : u64);
+    map!(idx: u64                      => fee_bps!     : u32);
+    map!(idx: u64                      => deposits     : Deposits as u128);
+    map!(idx: u64                      => cooldown!    : Cooldown as u64);
+    map!(address_channel: CompositeKey => cooldown!    : Cooldown as u64);
 }
 
 #[test]
