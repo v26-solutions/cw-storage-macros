@@ -33,6 +33,8 @@ macro_rules! composite_key {
 
             #[cfg(test)]
             impl $crate::ExampleKey for $t {
+                type KeyType = Self;
+
                 fn example() -> Self {
                     Self::from((
                         $(
@@ -680,7 +682,7 @@ macro_rules! map {
                 ::std::cell::RefCell::new(::std::collections::HashMap::default());
             }
 
-            fn [<$k _ $v _key>](key: $kt) -> Vec<u8> {
+            fn [<$k _ $v _key>](key: &$kt) -> Vec<u8> {
                 format!(
                     "{}.{}",
                     concat!(module_path!(), "::", stringify!($k), ":", stringify!([<$v _utf8>])),
@@ -689,18 +691,18 @@ macro_rules! map {
                 .into_bytes()
             }
 
-            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt, $v: &str) {
+            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt, $v: &str) {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), Some($v.to_owned())));
                 storage.set([<$k _ $v _key>]($k).as_slice(), $v.as_bytes())
             }
 
             #[allow(dead_code)]
-            pub fn [<clear _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt) {
+            pub fn [<clear _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt) {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), None));
                 storage.remove([<$k _ $v _key>]($k).as_slice())
             }
 
-            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: $kt) -> Option<String> {
+            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: &$kt) -> Option<String> {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| {
                     let mut cache_mut = cache.borrow_mut();
 
@@ -737,17 +739,17 @@ macro_rules! map {
                 fn works() {
                     let mut storage = MockStorage::default();
 
-                    assert_eq!(get(&storage, $kt::example()), None);
+                    assert_eq!(get(&storage, &$kt::example()), None);
 
-                    set(&mut storage, $kt::example(), "test");
+                    set(&mut storage, &$kt::example(), "test");
 
-                    assert_eq!(get(&storage, $kt::example()), Some("test".to_owned()));
+                    assert_eq!(get(&storage, &$kt::example()), Some("test".to_owned()));
 
-                    assert_eq!(storage, MockStorage::from((key($kt::example()).as_slice(), "test")));
+                    assert_eq!(storage, MockStorage::from((key(&$kt::example()).as_slice(), "test")));
 
-                    clear(&mut storage, $kt::example());
+                    clear(&mut storage, &$kt::example());
 
-                    assert_eq!(get(&storage, $kt::example()), None);
+                    assert_eq!(get(&storage, &$kt::example()), None);
 
                     assert_eq!(storage, MockStorage::default());
 
@@ -765,7 +767,7 @@ macro_rules! map {
             }
 
 
-            fn [<$k _ $v _key>](key: $kt) -> Vec<u8> {
+            fn [<$k _ $v _key>](key: &$kt) -> Vec<u8> {
                 format!(
                     "{}.{}",
                     concat!(module_path!(), "::", stringify!($k), ":", stringify!([<$v _utf8>])),
@@ -774,13 +776,13 @@ macro_rules! map {
                 .into_bytes()
             }
 
-            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt, $v: &str) {
+            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt, $v: &str) {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), $v.to_owned()));
 
                 storage.set([<$k _ $v _key>]($k).as_slice(), $v.as_bytes())
             }
 
-            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: $kt) -> String {
+            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: &$kt) -> String {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| {
                     let mut cache_mut = cache.borrow_mut();
 
@@ -815,15 +817,15 @@ macro_rules! map {
 
                 #[test]
                 fn works() {
-                    let mut storage = MockStorage::from((key($kt::example()).as_slice(), "test"));
+                    let mut storage = MockStorage::from((key(&$kt::example()).as_slice(), "test"));
 
-                    assert_eq!(get(&storage, $kt::example()), "test");
+                    assert_eq!(get(&storage, &$kt::example()), "test");
 
-                    set(&mut storage, $kt::example(), "test-1");
+                    set(&mut storage, &$kt::example(), "test-1");
 
-                    assert_eq!(get(&storage, $kt::example()), "test-1");
+                    assert_eq!(get(&storage, &$kt::example()), "test-1");
 
-                    assert_eq!(storage, MockStorage::from((key($kt::example()).as_slice(), "test-1")));
+                    assert_eq!(storage, MockStorage::from((key(&$kt::example()).as_slice(), "test-1")));
 
                     assert_eq!(storage.read_count(), 1);
                 }
@@ -838,7 +840,7 @@ macro_rules! map {
                 ::std::cell::RefCell::new(::std::collections::HashMap::default());
             }
 
-            fn [<$k _ $v _key>](key: $kt) -> Vec<u8> {
+            fn [<$k _ $v _key>](key: &$kt) -> Vec<u8> {
                 format!(
                     "{}.{}",
                     concat!(module_path!(), "::", stringify!($k), ":", stringify!([<$v _utf8>])),
@@ -847,20 +849,20 @@ macro_rules! map {
                 .into_bytes()
             }
 
-            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt, $v: &str) {
+            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt, $v: &str) {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), Some($v.to_owned())));
 
                 storage.set([<$k _ $v _key>]($k).as_slice(), $v.as_bytes())
             }
 
             #[allow(dead_code)]
-            pub fn [<clear _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt) {
+            pub fn [<clear _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt) {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), None));
 
                 storage.remove([<$k _ $v _key>]($k).as_slice())
             }
 
-            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: $kt) -> Option<$vt> {
+            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: &$kt) -> Option<$vt> {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| {
                     let mut cache_mut = cache.borrow_mut();
 
@@ -897,17 +899,17 @@ macro_rules! map {
                 fn works() {
                     let mut storage = MockStorage::default();
 
-                    assert_eq!(get(&storage, $kt::example()), None);
+                    assert_eq!(get(&storage, &$kt::example()), None);
 
-                    set(&mut storage, $kt::example(), "test");
+                    set(&mut storage, &$kt::example(), "test");
 
-                    assert_eq!(get(&storage, $kt::example()), Some("test".to_owned().into()));
+                    assert_eq!(get(&storage, &$kt::example()), Some("test".to_owned().into()));
 
-                    assert_eq!(storage, MockStorage::from((key($kt::example()).as_slice(), "test")));
+                    assert_eq!(storage, MockStorage::from((key(&$kt::example()).as_slice(), "test")));
 
-                    clear(&mut storage, $kt::example());
+                    clear(&mut storage, &$kt::example());
 
-                    assert_eq!(get(&storage, $kt::example()), None);
+                    assert_eq!(get(&storage, &$kt::example()), None);
 
                     assert_eq!(storage, MockStorage::default());
 
@@ -924,7 +926,7 @@ macro_rules! map {
                 ::std::cell::RefCell::new(::std::collections::HashMap::default());
             }
 
-            fn [<$k _ $v _key>](key: $kt) -> Vec<u8> {
+            fn [<$k _ $v _key>](key: &$kt) -> Vec<u8> {
                 format!(
                     "{}.{}",
                     concat!(module_path!(), "::", stringify!($k), ":", stringify!([<$v _utf8>])),
@@ -933,13 +935,13 @@ macro_rules! map {
                 .into_bytes()
             }
 
-            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt, $v: &str) {
+            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt, $v: &str) {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), $v.to_owned()));
 
                 storage.set([<$k _ $v _key>]($k).as_slice(), $v.as_bytes())
             }
 
-            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: $kt) -> $vt {
+            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: &$kt) -> $vt {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| {
                     let mut cache_mut = cache.borrow_mut();
 
@@ -974,15 +976,15 @@ macro_rules! map {
 
                 #[test]
                 fn works() {
-                    let mut storage = MockStorage::from((key($kt::example()).as_slice(), "test"));
+                    let mut storage = MockStorage::from((key(&$kt::example()).as_slice(), "test"));
 
-                    assert_eq!(get(&storage, $kt::example()), "test".to_owned().into());
+                    assert_eq!(get(&storage, &$kt::example()), "test".to_owned().into());
 
-                    set(&mut storage, $kt::example(), "test-1");
+                    set(&mut storage, &$kt::example(), "test-1");
 
-                    assert_eq!(get(&storage, $kt::example()), "test-1".to_owned().into());
+                    assert_eq!(get(&storage, &$kt::example()), "test-1".to_owned().into());
 
-                    assert_eq!(storage, MockStorage::from((key($kt::example()).as_slice(), "test-1")));
+                    assert_eq!(storage, MockStorage::from((key(&$kt::example()).as_slice(), "test-1")));
 
                     assert_eq!(storage.read_count(), 1);
                 }
@@ -997,7 +999,7 @@ macro_rules! map {
                 ::std::cell::RefCell::new(::std::collections::HashMap::default());
             }
 
-            fn [<$k _ $v _key>](key: $kt) -> Vec<u8> {
+            fn [<$k _ $v _key>](key: &$kt) -> Vec<u8> {
                 format!(
                     "{}.{}",
                     concat!(module_path!(), "::", stringify!($k), ":", stringify!([[<$v _ $int _be>]])),
@@ -1006,7 +1008,7 @@ macro_rules! map {
                 .into_bytes()
             }
 
-            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt, $v: $int) {
+            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt, $v: $int) {
                 let int: $int = $v.into();
 
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), Some(int)));
@@ -1015,13 +1017,13 @@ macro_rules! map {
             }
 
             #[allow(dead_code)]
-            pub fn [<clear _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt) {
+            pub fn [<clear _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt) {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), None));
 
                 storage.remove([<$k _ $v _key>]($k).as_slice())
             }
 
-            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: $kt) -> Option<$int> {
+            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: &$kt) -> Option<$int> {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| {
                     let mut cache_mut = cache.borrow_mut();
 
@@ -1063,17 +1065,17 @@ macro_rules! map {
                 fn works() {
                     let mut storage = MockStorage::default();
 
-                    assert_eq!(get(&storage, $kt::example()), None);
+                    assert_eq!(get(&storage, &$kt::example()), None);
 
-                    set(&mut storage, $kt::example(), $int::MAX);
+                    set(&mut storage, &$kt::example(), $int::MAX);
 
-                    assert_eq!(get(&storage, $kt::example()), Some($int::MAX));
+                    assert_eq!(get(&storage, &$kt::example()), Some($int::MAX));
 
-                    assert_eq!(storage, MockStorage::from((key($kt::example()).as_slice(), $int::MAX)));
+                    assert_eq!(storage, MockStorage::from((key(&$kt::example()).as_slice(), $int::MAX)));
 
-                    clear(&mut storage, $kt::example());
+                    clear(&mut storage, &$kt::example());
 
-                    assert_eq!(get(&storage, $kt::example()), None);
+                    assert_eq!(get(&storage, &$kt::example()), None);
 
                     assert_eq!(storage, MockStorage::default());
 
@@ -1090,7 +1092,7 @@ macro_rules! map {
                 ::std::cell::RefCell::new(::std::collections::HashMap::default());
             }
 
-            fn [<$k _ $v _key>](key: $kt) -> Vec<u8> {
+            fn [<$k _ $v _key>](key: &$kt) -> Vec<u8> {
                 format!(
                     "{}.{}",
                     concat!(module_path!(), "::", stringify!($k), ":", stringify!([[<$v _ $int _be>]])),
@@ -1099,7 +1101,7 @@ macro_rules! map {
                 .into_bytes()
             }
 
-            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt, $v: $int) {
+            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt, $v: $int) {
                 let int: $int = $v.into();
 
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), int));
@@ -1107,7 +1109,7 @@ macro_rules! map {
                 storage.set([<$k _ $v _key>]($k).as_slice(), int.to_be_bytes().as_slice())
             }
 
-            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: $kt) -> $int {
+            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: &$kt) -> $int {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| {
                     let mut cache_mut = cache.borrow_mut();
 
@@ -1142,15 +1144,15 @@ macro_rules! map {
 
                 #[test]
                 fn works() {
-                    let mut storage = MockStorage::from((key($kt::example()).as_slice(), 1));
+                    let mut storage = MockStorage::from((key(&$kt::example()).as_slice(), 1));
 
-                    assert_eq!(get(&storage, $kt::example()), 1);
+                    assert_eq!(get(&storage, &$kt::example()), 1);
 
-                    set(&mut storage, $kt::example(), 2);
+                    set(&mut storage, &$kt::example(), 2);
 
-                    assert_eq!(get(&storage, $kt::example()), 2);
+                    assert_eq!(get(&storage, &$kt::example()), 2);
 
-                    assert_eq!(storage, MockStorage::from((key($kt::example()).as_slice(), 2)));
+                    assert_eq!(storage, MockStorage::from((key(&$kt::example()).as_slice(), 2)));
 
                     assert_eq!(storage.read_count(), 1);
                 }
@@ -1165,7 +1167,7 @@ macro_rules! map {
                 ::std::cell::RefCell::new(::std::collections::HashMap::default());
             }
 
-            fn [<$k _ $v _key>](key: $kt) -> Vec<u8> {
+            fn [<$k _ $v _key>](key: &$kt) -> Vec<u8> {
                 format!(
                     "{}.{}",
                     concat!(module_path!(), "::", stringify!($k), ":", stringify!([[<$v _ $int _be>]])),
@@ -1174,7 +1176,7 @@ macro_rules! map {
                 .into_bytes()
             }
 
-            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt, $v: $vt) {
+            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt, $v: $vt) {
                 let int: $int = $v.into();
 
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), Some(int)));
@@ -1183,13 +1185,13 @@ macro_rules! map {
             }
 
             #[allow(dead_code)]
-            pub fn [<clear _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt) {
+            pub fn [<clear _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt) {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), None));
 
                 storage.remove([<$k _ $v _key>]($k).as_slice())
             }
 
-            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: $kt) -> Option<$vt> {
+            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: &$kt) -> Option<$vt> {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| {
                     let mut cache_mut = cache.borrow_mut();
 
@@ -1232,17 +1234,17 @@ macro_rules! map {
                 fn works() {
                     let mut storage = MockStorage::default();
 
-                    assert_eq!(get(&storage, $kt::example()), None);
+                    assert_eq!(get(&storage, &$kt::example()), None);
 
-                    set(&mut storage, $kt::example(), $int::MAX.into());
+                    set(&mut storage, &$kt::example(), $int::MAX.into());
 
-                    assert_eq!(get(&storage, $kt::example()), Some($vt::from($int::MAX)));
+                    assert_eq!(get(&storage, &$kt::example()), Some($vt::from($int::MAX)));
 
-                    assert_eq!(storage, MockStorage::from((key($kt::example()).as_slice(), $int::MAX)));
+                    assert_eq!(storage, MockStorage::from((key(&$kt::example()).as_slice(), $int::MAX)));
 
-                    clear(&mut storage, $kt::example());
+                    clear(&mut storage, &$kt::example());
 
-                    assert_eq!(get(&storage, $kt::example()), None);
+                    assert_eq!(get(&storage, &$kt::example()), None);
 
                     assert_eq!(storage, MockStorage::default());
 
@@ -1259,7 +1261,7 @@ macro_rules! map {
                 ::std::cell::RefCell::new(::std::collections::HashMap::default());
             }
 
-            fn [<$k _ $v _key>](key: $kt) -> Vec<u8> {
+            fn [<$k _ $v _key>](key: &$kt) -> Vec<u8> {
                 format!(
                     "{}.{}",
                     concat!(module_path!(), "::", stringify!($k), ":", stringify!([[<$v _ $int _be>]])),
@@ -1268,7 +1270,7 @@ macro_rules! map {
                 .into_bytes()
             }
 
-            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: $kt, $v: $vt) {
+            pub fn [<set _ $k _ $v>](storage: &mut dyn ::cosmwasm_std::Storage, $k: &$kt, $v: $vt) {
                 let int: $int = $v.into();
 
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| cache.borrow_mut().insert($k.to_string(), int));
@@ -1276,7 +1278,7 @@ macro_rules! map {
                 storage.set([<$k _ $v _key>]($k).as_slice(), int.to_be_bytes().as_slice())
             }
 
-            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: $kt) -> $vt {
+            pub fn [<$k _ $v>](storage: &dyn ::cosmwasm_std::Storage, $k: &$kt) -> $vt {
                 [<$k:upper _ $v:upper _CACHE>].with(|cache| {
                     let mut cache_mut = cache.borrow_mut();
 
@@ -1311,15 +1313,15 @@ macro_rules! map {
 
                 #[test]
                 fn works() {
-                    let mut storage = MockStorage::from((key($kt::example()).as_slice(), 1));
+                    let mut storage = MockStorage::from((key(&$kt::example()).as_slice(), 1));
 
-                    assert_eq!(get(&storage, $kt::example()), $vt::from([<1 $int>]));
+                    assert_eq!(get(&storage, &$kt::example()), $vt::from([<1 $int>]));
 
-                    set(&mut storage, $kt::example(), $vt::from([<2 $int>]));
+                    set(&mut storage, &$kt::example(), $vt::from([<2 $int>]));
 
-                    assert_eq!(get(&storage, $kt::example()), $vt::from([<2 $int>]));
+                    assert_eq!(get(&storage, &$kt::example()), $vt::from([<2 $int>]));
 
-                    assert_eq!(storage, MockStorage::from((key($kt::example()).as_slice(), 2)));
+                    assert_eq!(storage, MockStorage::from((key(&$kt::example()).as_slice(), 2)));
 
                     assert_eq!(storage.read_count(), 1);
                 }
@@ -1329,9 +1331,11 @@ macro_rules! map {
 }
 
 /// `ExampleKey` is a trait for generating example keys for testing.
-pub trait ExampleKey: Sized {
+pub trait ExampleKey {
+    type KeyType;
+
     /// Returns an example instance of the implementing type.
-    fn example() -> Self;
+    fn example() -> Self::KeyType;
 }
 
 /// A macro for implementing the `ExampleKey` trait.
@@ -1341,6 +1345,8 @@ macro_rules! example_key {
     ($t:ty, $example:expr) => {
         #[cfg(test)]
         impl $crate::ExampleKey for $t {
+            type KeyType = $t;
+
             fn example() -> $t {
                 <$t>::from($example)
             }
@@ -1352,6 +1358,8 @@ macro_rules! impl_int_example_key {
     ($($int:ty),+) => {
         $(
             impl ExampleKey for $int {
+                type KeyType = $int;
+
                 fn example() -> $int {
                     <$int>::MAX
                 }
@@ -1363,8 +1371,18 @@ macro_rules! impl_int_example_key {
 impl_int_example_key!(u8, u16, u32, u64, u128);
 
 impl ExampleKey for String {
+    type KeyType = Self;
+
     fn example() -> String {
         "test".to_owned()
+    }
+}
+
+impl ExampleKey for str {
+    type KeyType = &'static str;
+
+    fn example() -> Self::KeyType {
+        "test"
     }
 }
 

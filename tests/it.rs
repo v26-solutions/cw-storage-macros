@@ -33,6 +33,7 @@ mod state {
 
     map!(address: Address              => name         : String);
     map!(source: String                => destination! : String);
+    map!(destination: str              => source!      : String);
     map!(idx: u64                      => address      : Address  as String);
     map!(idx: u64                      => channel!     : Channel  as String);
     map!(idx: u64                      => count        : u64);
@@ -61,23 +62,23 @@ fn generated_api() {
     // Useful for configuration that is set in instantiate handlers.
     assert_eq!(state::cooldown(&storage), Cooldown::from(1000));
 
-    assert_eq!(state::idx_deposits(&storage, 0), None);
+    assert_eq!(state::idx_deposits(&storage, &0), None);
 
-    state::set_idx_deposits(&mut storage, 0, Deposits::from(1_000_000));
+    state::set_idx_deposits(&mut storage, &0, Deposits::from(1_000_000));
 
     assert_eq!(
-        state::idx_deposits(&storage, 0),
+        state::idx_deposits(&storage, &0),
         Some(Deposits::from(1_000_000))
     );
 
-    state::clear_idx_deposits(&mut storage, 0);
+    state::clear_idx_deposits(&mut storage, &0);
 
-    assert_eq!(state::idx_deposits(&storage, 0), None);
+    assert_eq!(state::idx_deposits(&storage, &0), None);
 
-    state::set_idx_fee_bps(&mut storage, 1, 1_000);
+    state::set_idx_fee_bps(&mut storage, &1, 1_000);
 
-    assert_eq!(state::idx_fee_bps(&storage, 1), 1_000);
+    assert_eq!(state::idx_fee_bps(&storage, &1), 1_000);
 
     // this will panic because it a cooldown has not been set for index 2
-    state::idx_cooldown(&storage, 2);
+    state::idx_cooldown(&storage, &2);
 }
